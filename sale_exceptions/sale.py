@@ -29,6 +29,7 @@ from openerp.osv import fields
 from openerp.osv.osv import except_osv
 from tools.safe_eval import safe_eval as eval
 from tools.translate import _
+from openerp.tools.config import config
 
 class sale_exception(Model):
     _name = "sale.exception"
@@ -179,6 +180,7 @@ class sale_order(Model):
             eval(expr, space,
                  mode='exec', nocopy=True) # nocopy allows to return 'result'
         except Exception, e:
+            if config['debug_mode']: raise
             raise except_osv(_('Error'), _('Error when evaluating the sale exception rule :\n %s \n(%s)') %
                                  (rule.name, e))
         return space.get('failed', False)
