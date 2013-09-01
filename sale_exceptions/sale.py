@@ -206,3 +206,13 @@ class sale_order(Model):
             'ignore_exceptions': False,
         })
         return super(sale_order, self).copy(cr, uid, id, default=default, context=context)
+
+    def remove_exception(self, cr, uid, ids, module, xml_id, context=None):
+        model_data_obj = self.pool.get('ir.model.data')
+        __, exception_id = model_data_obj.get_object_reference(
+                cr, uid, module, xml_id)
+        for order in self.browse(cr, uid, ids, context=context):
+            if order.state == 'draft':
+                order.write({'exceptions_ids': [(3, exception_id)]})
+        return True
+
