@@ -1,65 +1,37 @@
 <?xml version="1.0" ?>
 <openerp>
     <data>
-
-        <record id="view_sale_exception_tree" model="ir.ui.view">
-            <field name="name">sale.exception.tree</field>
-            <field name="model">sale.exception</field>
-            <field name="type">tree</field>
+        
+        <record id="view_exception_form" model="ir.ui.view">
+            <field name="model">exception.rule</field>
+            <field name="inherit_id" ref="exception_rule.view_exception_form"/>
             <field name="arch" type="xml">
-                <tree string="Sale Exception">
-                    <field name="active"/>
-                    <field name="name"/>
-                    <field name="description"/>
-                    <field name="model"/>
-                    <field name="sequence"/>
-                </tree>
-            </field>
-        </record>
-
-        <record id="view_sale_exception_form" model="ir.ui.view">
-            <field name="name">sale.exception.form</field>
-            <field name="model">sale.exception</field>
-            <field name="type">form</field>
-            <field name="arch" type="xml">
-                <form string="Sale Exception Setup">
-                    <group colspan="4" col="2">
-                        <field name="name"/>
-                        <field name="description"/>
-                    </group>
-                    <group col="4" colspan="4" groups="base.group_sale_manager">
-                        <field name="active"/>
-                        <field name="sequence"/>
-                        <group colspan="4" col="2" groups="base.group_system">
-                            <field name="model"/>
-                            <field name="code"/>
-                        </group>
-                    </group>
-                    <group colspan="4" col="2">
+                <group name="configuration" position="after">
+                    <group colspan="4" col="2"
+                        attrs="{'invisible': [('model',',not in', ['sale.order', 'sale.order.line'])]}">
                         <separator string="Affected Sales Orders"/>
                         <newline/>
                         <field name="sale_order_ids" nolabel="1" domain="[('state', '=', 'draft')]"/>
                     </group>
-                </form>
+                </group>
             </field>
         </record>
 
         <record id="action_sale_test_tree" model="ir.actions.act_window">
-                  <field name="name">Exception Rules</field>
-                  <field name="res_model">sale.exception</field>
-                  <field name="view_type">form</field>
-                  <field name="view_mode">tree,form</field>
-                  <field name="view_id" ref="view_sale_exception_tree"/>
-                  <field name="context">{'active_test': False}</field>
-              </record>
+              <field name="name">Sale Rules</field>
+              <field name="res_model">exception.rule</field>
+              <field name="view_type">form</field>
+              <field name="view_mode">tree,form</field>
+              <field name="view_id" ref="exception_rule.view_exception_tree"/>
+              <field name="context">{'active_test': False}</field>
+              <field name="domain">[('model', 'in', ['sale.order', 'sale.order.line'])]</field>
+        </record>
 
         <menuitem action="action_sale_test_tree" id="menu_sale_test" parent="base.menu_sale_config_sales" />
 
 
         <record id="view_order_form" model="ir.ui.view">
-            <field name="name">sale_exceptions.view_order_form</field>
             <field name="model">sale.order</field>
-            <field name="type">form</field>
             <field name="priority">100</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
@@ -80,11 +52,9 @@
             </field>
         </record>
 
-        <record id="view_order_tree" model="ir.ui.view">
-            <field name="name">sale_exceptions.view_order_tree</field>
+        <record id="view_quotation_tree" model="ir.ui.view">
             <field name="model">sale.order</field>
-            <field name="type">tree</field>
-            <field name="inherit_id" ref="sale.view_order_tree"/>
+            <field name="inherit_id" ref="sale.view_quotation_tree"/>
             <field name="arch" type="xml">
                 <field name="state" position="after">
                     <field name="main_exception_id"/>
@@ -93,15 +63,16 @@
         </record>
 
         <record id="view_sales_order_filter" model="ir.ui.view">
-            <field name="name">sale_exceptions.view_sales_order_filter</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_sales_order_filter" />
-            <field name="type">search</field>
             <field eval="32" name="priority"/>
             <field name="arch" type="xml">
                 <filter icon="terp-check" string="Sales" position="after">
                     <separator orientation="vertical"/>
                     <filter icon="terp-emblem-important" name="tofix" string="TO FIX" domain="[('main_exception_id','!=',False)]"/>
+                </filter>
+                <filter string="Order Date" position="after">
+                    <filter string="TOFIX" domain="[]" context="{'group_by':'main_exception_id'}"/>
                 </filter>
             </field>
         </record>

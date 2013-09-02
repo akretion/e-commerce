@@ -33,15 +33,19 @@ This is especially useful in an order importation scenario such as with the base
 """,
     'author': 'Akretion',
     'website': 'http://www.akretion.com',
-    'depends': ['sale'],
+    'depends': [
+        'sale',
+        'exception_rule',
+    ],
     'init_xml': [
-                   'settings/sale.exception.csv',
+        'settings/exception.rule.csv',
                 ],
-    'update_xml': ['sale_workflow.xml',
-                   'sale_view.xml',
-                   'sale_exceptions_data.xml',
-                   'wizard/sale_exception_confirm_view.xml',
-                   'security/ir.model.access.csv'],
+    'update_xml': [
+        'sale_workflow.xml',
+        'sale_view.xml',
+        'sale_exceptions_data.xml',
+        'security/ir.model.access.csv',
+    ],
     'demo_xml': [],
     'installable': True,
 }
