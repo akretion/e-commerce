@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <record id="view_wizard_exception_confirm" model="ir.ui.view">
+            <field name="model">wizard.exception.confirm</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Exceptions" version="7.0">
+                    <group>
+                        <field name="exception_ids" nolabel="1" colspan="4">
+                            <form string="Exception">
+                               <field name="name" colspan="4"/>
+                               <field name="description" colspan="4"/>
+                            </form>
+                            <tree string="Exceptions">
+                                <field name="name"/>
+                                <field name="description"/>
+                            </tree>
+                        </field>
+                        <newline/>
+                        <field name="ignore" groups='base.group_sale_manager'/>
+                    </group>
+                    <footer>
+                        <button name="action_confirm" string="_Ok"
+                            colspan="1" type="object" icon="gtk-ok" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_wizard_exception_confirm" model="ir.actions.act_window">
+            <field name="name">Wizard Exceptions</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">wizard.exception.confirm</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_wizard_exception_confirm"/>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</openerp>
