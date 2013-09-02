@@ -46,9 +46,9 @@ does not preclude to use it in other sectors.
     'depends': ['sale_payment_method',
                 'sale_exceptions',
                 ],
-    'data': ['wizard/pay_sale_order.xml',
-             'sale_view.xml',
-             'settings/sale.exception.csv',
+    'data': [
+        'wizard/pay_sale_order.xml',
+        'sale_view.xml',
              ],
     'demo': [],
     'installable': True,
