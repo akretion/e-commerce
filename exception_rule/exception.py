@@ -76,7 +76,9 @@ class CheckModel(object):
         res = {}
         for current_object in self.browse(cr, uid, ids, context=context):
             if current_object.state == 'draft' and current_object.exceptions_ids:
-                res[current_object.id] = current_object.exceptions_ids[0].id
+                exceptions = [(exception.sequence, exception.id) for exception in current_object.exceptions_ids]
+                exceptions.sort()
+                res[current_object.id] = exceptions[0][1]
             else:
                 res[current_object.id] = False
         return res
