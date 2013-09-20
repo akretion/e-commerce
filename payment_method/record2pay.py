@@ -26,38 +26,28 @@ from collections import Iterable
 import decimal_precision as dp
 
 
-class sale_order(orm.Model):
-    _inherit = 'sale.order'
-
-    def _get_order_from_move(self, cr, uid, ids, context=None):
-        result = set()
-        move_obj = self.pool.get('account.move')
-        for move in move_obj.browse(cr, uid, ids, context=context):
-            for order in move.order_ids:
-                result.add(order.id)
-        return list(result)
-
-    def _get_order_from_line(self, cr, uid, ids, context=None):
-        so_obj = self.pool.get('sale.order')
-        return so_obj._get_order(cr, uid, ids, context=context)
+class record2pay(orm.AbstractModel):
+    _name = 'record2pay'
+    _date_key = None
+    _movekey2record = None
 
     def _get_amount(self, cr, uid, ids, fields, args, context=None):
         res = {}
-        for order in self.browse(cr, uid, ids, context=context):
-            #TODO add support when payment is linked to many order
+        for record in self.browse(cr, uid, ids, context=context):
+            #TODO add support when payment is linked to many record
             paid_amount = 0
-            for line in order.payment_ids:    
+            for line in record.payment_ids:    
                 paid_amount += line.credit - line.debit
-            res[order.id] = {
+            res[record.id] = {
                     'amount_paid': paid_amount, 
-                    'residual': order.amount_total - paid_amount,
+                    'residual': record.amount_total - paid_amount,
                     }
         return res
 
     def _payment_exists(self, cursor, user, ids, name, arg, context=None):
         res = {}
-        for sale in self.browse(cursor, user, ids, context=context):
-            res[sale.id] = bool(sale.payment_ids)
+        for record in self.browse(cursor, user, ids, context=context):
+            res[record.id] = bool(record.payment_ids)
         return res
 
     _columns = {
@@ -82,85 +72,44 @@ class sale_order(orm.Model):
             _payment_exists,
             string='Has automatic payment',
             type='boolean',
-            help="It indicates that sales order has at least one payment."),
+            help="It indicates that record has at least one payment."),
     }
 
     def copy(self, cr, uid, id, default=None, context=None):
         if default is None:
             default = {}
         default['payment_ids'] = False
-        return super(sale_order, self).copy(cr, uid, id,
+        return super(record2pay, self).copy(cr, uid, id,
                                             default, context=context)
-
-    def automatic_payment(self, cr, uid, ids, amount=None, context=None):
-        """ Create the payment entries to pay a sale order, respecting
-        the payment terms.
-        If no amount is defined, it will pay the residual amount of the sale
-        order. """
-        if isinstance(ids, Iterable):
-            assert len(ids) == 1, "one sale order at a time can be paid"
-            ids = ids[0]
-        sale = self.browse(cr, uid, ids, context=context)
-        method = sale.payment_method_id
-        if not method:
-            raise osv.except_osv(
-                _('Configuration Error'),
-                _("An automatic payment can not be created for the sale "
-                  "order %s because it has no payment method.") % sale.name)
-
-        if not method.journal_id:
-            raise osv.except_osv(
-                _('Configuration Error'),
-                _("An automatic payment should be created for the sale order %s "
-                  "but the payment method '%s' has no journal defined.") %
-                (sale.name, method.name))
-
-        journal = method.journal_id
-        date = sale.date_order
-        if amount is None:
-            amount = sale.residual
-        if sale.payment_term:
-            term_obj = self.pool.get('account.payment.term')
-            amounts = term_obj.compute(cr, uid, sale.payment_term.id,
-                                       amount, date_ref=date,
-                                       context=context)
-        else:
-            amounts = [(date, amount)]
-
-        # reversed is cosmetic, compute returns terms in the 'wrong' order
-        for date, amount in reversed(amounts):
-            self._add_payment(cr, uid, sale, journal,
-                              amount, date, context=context)
-        return True
 
     def add_payment(self, cr, uid, ids, journal_id, amount,
                     date=None, description=None, context=None):
         """ Generate payment move lines of a certain amount linked
-        with the sale order. """
+        with the record. """
         if isinstance(ids, Iterable):
-            assert len(ids) == 1, "one sale order at a time can be paid"
+            assert len(ids) == 1, "one record at a time can be paid"
             ids = ids[0]
         journal_obj = self.pool.get('account.journal')
 
-        sale = self.browse(cr, uid, ids, context=context)
-        if date is None:
-            date = sale.date_order
+        record = self.browse(cr, uid, ids, context=context)
+        if date is None and self._date_key:
+            date = record[self._date_key]
         journal = journal_obj.browse(cr, uid, journal_id, context=context)
-        self._add_payment(cr, uid, sale, journal, amount, date, description, context=context)
+        self._add_payment(cr, uid, record, journal, amount, date, description, context=context)
         return True
 
-    def _add_payment(self, cr, uid, sale, journal, amount, date, description, context=None):
-        """ Generate move lines entries to pay the sale order. """
+    def _add_payment(self, cr, uid, record, journal, amount, date, description, context=None):
+        """ Generate move lines entries to pay the record. """
         move_obj = self.pool.get('account.move')
         period_obj = self.pool.get('account.period')
         period_id = period_obj.find(cr, uid, dt=date, context=context)[0]
         period = period_obj.browse(cr, uid, period_id, context=context)
         move_name = description or self._get_payment_move_name(cr, uid, journal,
                                                 period, context=context)
-        move_vals = self._prepare_payment_move(cr, uid, move_name, sale,
+        move_vals = self._prepare_payment_move(cr, uid, move_name, record,
                                                journal, period, date,
                                                context=context)
-        move_lines = self._prepare_payment_move_line(cr, uid, move_name, sale,
+        move_lines = self._prepare_payment_move_line(cr, uid, move_name, record,
                                                      journal, period, amount,
                                                      date, context=context)
 
@@ -189,21 +138,21 @@ class sale_order(orm.Model):
         name = seq_obj.next_by_id(cr, uid, sequence.id, context=ctx)
         return name
 
-    def _prepare_payment_move(self, cr, uid, move_name, sale, journal,
+    def _prepare_payment_move(self, cr, uid, move_name, record, journal,
                               period, date, context=None):
         return {'name': move_name,
                 'journal_id': journal.id,
                 'date': date,
-                'ref': sale.name,
+                'ref': record.name,
                 'period_id': period.id,
                 }
 
-    def _prepare_payment_move_line(self, cr, uid, move_name, sale, journal,
+    def _prepare_payment_move_line(self, cr, uid, move_name, record, journal,
                                    period, amount, date, context=None):
         """ """
         partner_obj = self.pool.get('res.partner')
         currency_obj = self.pool.get('res.currency')
-        partner = partner_obj._find_accounting_partner(sale.partner_id)
+        partner = partner_obj._find_accounting_partner(record.partner_id)
 
         company = journal.company_id
 
@@ -244,7 +193,7 @@ class sale_order(orm.Model):
             'date': date,
             'amount_currency': -amount_currency,
             'currency_id': currency_id,
-            'sale_ids': [(4, sale.id)],
+            self._movekey2record: [(4, record.id)],
         }
         return debit_line, credit_line
 
@@ -260,7 +209,7 @@ class sale_order(orm.Model):
 
     def action_view_payments(self, cr, uid, ids, context=None):
         """ Return an action to display the payment linked
-        with the sale order """
+        with the record """
 
         mod_obj = self.pool.get('ir.model.data')
         act_obj = self.pool.get('ir.actions.act_window')
@@ -287,10 +236,10 @@ class sale_order(orm.Model):
         return action
 
     def action_cancel(self, cr, uid, ids, context=None):
-        for sale in self.browse(cr, uid, ids, context=context):
-            if sale.payment_ids:
+        for record in self.browse(cr, uid, ids, context=context):
+            if record.payment_ids:
                 raise osv.except_osv(
-                    _('Cannot cancel this sales order!'),
+                    _('Cannot cancel this record!'),
                     _('Automatic payment entries are linked '
-                      'with the sale order.'))
-        return super(sale_order, self).action_cancel(cr, uid, ids, context=context)
+                      'with the record.'))
+        return super(record2pay, self).action_cancel(cr, uid, ids, context=context)
