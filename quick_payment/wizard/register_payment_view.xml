@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
-        <record model="ir.ui.view" id="pay_sale_order_view">
-            <field name="name">pay.sale.order.view</field>
-            <field name="model">pay.sale.order</field>
-            <field name="type">form</field>
+
+        <record model="ir.ui.view" id="register_payment_view">
+            <field name="model">register.payment</field>
             <field name="arch" type="xml">
-                <form string="Pay Sale Order" version="7.0">
+                <form string="Register Payment" version="7.0">
                     <group>
                         <field name="description" string="Description"/>
                         <field name="journal_id" string="Journal"/>
@@ -14,9 +13,9 @@
                         <field name="date" string="Date"/>
                     </group>
                     <footer>
-                        <button string="Pay" name="pay_sale_order" type="object" class="oe_highlight"/>
+                        <button string="Pay" name="register_payment" type="object" class="oe_highlight"/>
                         or
-                        <button string="Pay And Confirm Order" name="pay_sale_order_and_confirm" type="object" class="oe_highlight"/>
+                        <button string="Pay And Confirm" name="register_payment_and_confirm" type="object" class="oe_highlight"/>
                         or
                         <button string="Cancel" class="oe_link" special="cancel"/>
                     </footer>
@@ -24,13 +23,14 @@
             </field>
         </record>
 
-        <record id="open_pay_sale_order" model="ir.actions.act_window">
-            <field name="name">Pay Sale Order</field>
+        <record id="open_register_payment" model="ir.actions.act_window">
+            <field name="name">Register Payment</field>
             <field name="type">ir.actions.act_window</field>
-            <field name="res_model">pay.sale.order</field>
+            <field name="res_model">register.payment</field>
             <field name="view_type">form</field>
             <field name="target">new</field>
-            <field name="view_id" ref="pay_sale_order_view"/>
+            <field name="view_id" ref="register_payment_view"/>
         </record>
+
     </data>
 </openerp>

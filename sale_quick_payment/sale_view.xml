@@ -16,7 +16,7 @@
             <field name="inherit_id" ref="sale_payment_method.sale_order_view_form" />
             <field name="arch" type="xml">
                 <button name="print_quotation" position="after">
-                  <button name="%(open_pay_sale_order)d"
+                    <button name="%(quick_payment.open_register_payment)d"
                       string="Register Payments"
                       type="action" states="draft,sent"/>
                 </button>
