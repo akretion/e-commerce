@@ -30,6 +30,7 @@ class record2pay(orm.AbstractModel):
     _name = 'record2pay'
     _date_key = None
     _movekey2record = None
+    _payment_term_key = None
 
     def _get_amount(self, cr, uid, ids, fields, args, context=None):
         res = {}
@@ -42,12 +43,6 @@ class record2pay(orm.AbstractModel):
                     'amount_paid': paid_amount, 
                     'residual': record.amount_total - paid_amount,
                     }
-        return res
-
-    def _payment_exists(self, cursor, user, ids, name, arg, context=None):
-        res = {}
-        for record in self.browse(cursor, user, ids, context=context):
-            res[record.id] = bool(record.payment_ids)
         return res
 
     _columns = {
@@ -68,12 +63,7 @@ class record2pay(orm.AbstractModel):
             string='Amount Paid',
             store=False,
             multi='payment'),
-        'payment_exists': fields.function(
-            _payment_exists,
-            string='Has automatic payment',
-            type='boolean',
-            help="It indicates that record has at least one payment."),
-    }
+   }
 
     def copy(self, cr, uid, id, default=None, context=None):
         if default is None:
@@ -204,7 +194,7 @@ class record2pay(orm.AbstractModel):
         method_obj = self.pool.get('payment.method')
         method = method_obj.browse(cr, uid, payment_method_id, context=context)
         if method.payment_term_id:
-            result['payment_term'] = method.payment_term_id.id
+            result[self._payment_term_key] = method.payment_term_id.id
         return {'value': result}
 
     def action_view_payments(self, cr, uid, ids, context=None):
