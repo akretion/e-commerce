@@ -139,54 +139,8 @@ class record2pay(orm.AbstractModel):
 
     def _prepare_payment_move_line(self, cr, uid, move_name, record, journal,
                                    period, amount, date, context=None):
-        """ """
-        partner_obj = self.pool.get('res.partner')
-        currency_obj = self.pool.get('res.currency')
-        partner = partner_obj._find_accounting_partner(record.partner_id)
-
-        company = journal.company_id
-
-        currency_id = False
-        amount_currency = 0.0
-        if journal.currency and journal.currency.id != company.currency_id.id:
-            currency_id = journal.currency.id
-            amount_currency, amount = (amount,
-                                       currency_obj.compute(cr, uid,
-                                                            currency_id,
-                                                            company.currency_id.id,
-                                                            amount,
-                                                            context=context))
-
-        # payment line (bank / cash)
-        debit_line = {
-            'name': move_name,
-            'debit': amount,
-            'credit': 0.0,
-            'account_id': journal.default_credit_account_id.id,
-            'journal_id': journal.id,
-            'period_id': period.id,
-            'partner_id': partner.id,
-            'date': date,
-            'amount_currency': amount_currency,
-            'currency_id': currency_id,
-        }
-
-        # payment line (receivable)
-        credit_line = {
-            'name': move_name,
-            'debit': 0.0,
-            'credit': amount,
-            'account_id': partner.property_account_receivable.id,
-            'journal_id': journal.id,
-            'period_id': period.id,
-            'partner_id': partner.id,
-            'date': date,
-            'amount_currency': -amount_currency,
-            'currency_id': currency_id,
-            self._movekey2record: [(4, record.id)],
-        }
-        return debit_line, credit_line
-
+        raise NotImplemented
+ 
     def onchange_payment_method_id(self, cr, uid, ids, payment_method_id, context=None):
         if not payment_method_id:
             return {}
