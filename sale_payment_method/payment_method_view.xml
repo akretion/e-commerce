@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  sale_payment for OpenERP
+  Copyright (C) 2011 Akretion Sébastien BEAU <sebastien.beau@akretion.com>
+  The licence is in the file __openerp__.py
+-->
+
+<openerp>
+    <data>
+
+        <menuitem action="payment_method.act_payment_method_form" id="menu_action_paymetn_method_form" parent="base.menu_sale_config_sales" sequence="20"/>
+
+    </data>
+</openerp>
