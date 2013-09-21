@@ -24,14 +24,13 @@
 import time
 import netsvc
 
-from openerp.osv.orm import Model
-from openerp.osv import fields
+from openerp.osv import orm, fields
 from openerp.osv.osv import except_osv
 from tools.safe_eval import safe_eval as eval
 from tools.translate import _
 from openerp.tools.config import config
 
-class exception_rule(Model):
+class exception_rule(orm.Model):
     _name = "exception.rule"
     _description = "Exceptions Rule"
     _order="active desc, sequence asc"
@@ -69,7 +68,9 @@ class exception_rule(Model):
 """
     }
 
-class CheckModel(object):
+class Record2Check(orm.AbstractModel):
+    _name = "record2check"
+    _description = "Record to Check"
     _line_key = None
 
     def get_main_error(self, cr, uid, ids, name, args, context=None):
@@ -82,6 +83,23 @@ class CheckModel(object):
             else:
                 res[current_object.id] = False
         return res
+
+    def _get_main_error(self, cr, uid, ids, name, args, context=None):
+        return self.get_main_error(cr, uid, ids, name, args, context=context)
+
+    _columns = {
+        'main_exception_id': fields.function(_get_main_error,
+                        type='many2one',
+                        relation="exception.rule",
+                        string='Main Exception',
+                        store={
+                            'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['exceptions_ids', 'state'], 10),
+                        }),
+        'exceptions_ids': fields.many2many('exception.rule',
+                                           string='Exceptions'),
+        'ignore_exceptions': fields.boolean('Ignore Exceptions'),
+    }
+
 
     def test_all_draft_orders(self, cr, uid, context=None):
         ids = self.search(cr, uid, [('state', '=', 'draft')])
@@ -111,13 +129,6 @@ class CheckModel(object):
             'res_id': list_id,
         }
         return action
-
-    def action_button_confirm(self, cr, uid, ids, context=None):
-        exception_ids = self.detect_exceptions(cr, uid, ids, context=context)
-        if exception_ids:
-            return self._popup_exceptions(cr, uid, ids[0],  context=context)
-        else:
-            return super(CheckModel, self).action_button_confirm(cr, uid, ids, context=context)
 
     def test_exceptions(self, cr, uid, ids, context=None):
         """
@@ -199,7 +210,7 @@ class CheckModel(object):
         default.update({
             'ignore_exceptions': False,
         })
-        return super(CheckModel, self).copy(cr, uid, id, default=default, context=context)
+        return super(Record2Check, self).copy(cr, uid, id, default=default, context=context)
 
     def remove_exception(self, cr, uid, ids, module, xml_id, context=None):
         model_data_obj = self.pool.get('ir.model.data')

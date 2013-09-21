@@ -23,7 +23,6 @@
 
 from openerp.osv import orm, fields
 from openerp.tools.config import config
-from openerp.addons.exception_rule.exception import CheckModel 
 
 class exception_rule(orm.Model):
     _inherit = "exception.rule"
@@ -40,26 +39,18 @@ class exception_rule(orm.Model):
     }
 
 
-class sale_order(CheckModel, orm.Model):
-    _inherit = "sale.order"
+class sale_order(orm.Model):
+    _inherit = ["sale.order", "record2check"]
+    _name = "sale.order"
     _line_key = "order_line"
 
     _order = 'main_exception_id asc, date_order desc, name desc'
 
-    def _get_main_error(self, cr, uid, ids, name, args, context=None):
-        return self.get_main_error(cr, uid, ids, name, args, context=context)
+    def action_button_confirm(self, cr, uid, ids, context=None):
+        exception_ids = self.detect_exceptions(cr, uid, ids, context=context)
+        if exception_ids:
+            return self._popup_exceptions(cr, uid, ids[0],  context=context)
+        else:
+            return super(Record2Check, self).action_button_confirm(cr, uid, ids, context=context)
 
-    _columns = {
-        'main_exception_id': fields.function(_get_main_error,
-                        type='many2one',
-                        relation="exception.rule",
-                        string='Main Exception',
-                        store={
-                            'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['exceptions_ids', 'state'], 10),
-                        }),
-        'exceptions_ids': fields.many2many('exception.rule',
-                                           string='Exceptions'),
-        'ignore_exceptions': fields.boolean('Ignore Exceptions'),
-    }
-
-
+ 
