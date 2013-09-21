@@ -28,10 +28,12 @@ class exception_rule(orm.Model):
     _inherit = "exception.rule"
 
     def get_available_model(self, cr, uid, context=None):
-        return [
+        result = super(exception_rule, self).get_available_model(cr, uid, context=context)
+        result += [
             ('sale.order', 'Sale Order'),
             ('sale.order.line', 'Sale Order Line'),
         ]
+        return result
  
     _columns = {
         'sale_order_ids': fields.many2many('sale.order',
