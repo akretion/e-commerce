@@ -37,12 +37,12 @@ class account_invoice(orm.Model):
     }
 
     def _can_be_reconciled(self, cr, uid, invoice, context=None):
-        if not (invoice.sale_ids and
-                invoice.sale_ids[0].payment_ids and invoice.move_id):
+        payments = self._get_payment(cr, uid, invoice, context=context)
+        if not (payments and invoice.move_id):
             return False
         # Check currency
         company_currency_id = invoice.company_id.currency_id.id
-        for payment in invoice.sale_ids[0].payment_ids:
+        for payment in payments:
             for move in payment.line_id:
                 currency_id = move.currency_id.id or company_currency_id
                 if currency_id != invoice.currency_id.id:
@@ -93,6 +93,11 @@ class account_invoice(orm.Model):
             'context': ctx,
         }
 
+    def _get_payment(self, cr, uid, invoice, context=None):
+        if invoice.type == "out_invoice" and invoice.sale_ids:
+            return invoice.sale_ids[0].payment_ids
+        return []
+
     def _reconcile_invoice(self, cr, uid, invoice, context=None):
         move_line_obj = self.pool.get('account.move.line')
         currency_obj = self.pool.get('res.currency')
@@ -102,7 +107,7 @@ class account_invoice(orm.Model):
         use_currency = currency.id != company_currency_id
         if self._can_be_reconciled(cr, uid, invoice, context=context):
             payment_move_lines = []
-            for payment in invoice.sale_ids[0].payment_ids:
+            for payment in self._get_payment(cr, uid, invoice, context=context):
                 payment_move_lines += payment.line_id
             res_payment = self._get_sum_payment_move_line(
                 cr, uid, payment_move_lines, context=context)
