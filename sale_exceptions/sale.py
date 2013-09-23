@@ -22,7 +22,7 @@
 ##############################################################################
 
 from openerp.osv import orm, fields
-from openerp.tools.config import config
+
 
 class exception_rule(orm.Model):
     _inherit = "exception.rule"
@@ -48,11 +48,25 @@ class sale_order(orm.Model):
 
     _order = 'main_exception_id asc, date_order desc, name desc'
 
+    def _get_main_error(self, cr, uid, ids, name, args, context=None):
+        return self.get_main_error(cr, uid, ids, name, args, context=context)
+
+    _columns = {
+        'main_exception_id': fields.function(_get_main_error,
+                        type='many2one',
+                        relation="exception.rule",
+                        string='Main Exception',
+                        store={
+                            'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['exceptions_ids', 'state'], 10),
+                        }),
+    } 
+
     def action_button_confirm(self, cr, uid, ids, context=None):
         exception_ids = self.detect_exceptions(cr, uid, ids, context=context)
         if exception_ids:
             return self._popup_exceptions(cr, uid, ids[0],  context=context)
         else:
-            return super(Record2Check, self).action_button_confirm(cr, uid, ids, context=context)
+            return super(sale_order, self).action_button_confirm(cr, uid, ids, context=context)
 
- 
+
+
