@@ -48,11 +48,19 @@ class account_invoice(orm.Model):
                 return False
         return True
 
-    def _get_sum_invoice_move_line(self, cr, uid, move_lines, context=None):
-        return self._get_sum_move_line(cr, uid, move_lines, 'debit', context=None)
+    def _get_sum_invoice_move_line(self, cr, uid, move_lines, invoice_type, context=None):
+        if invoice_type in ['in_refund', 'out_invoice']:
+            line_type = 'debit'
+        else:
+            line_type = 'credit'
+        return self._get_sum_move_line(cr, uid, move_lines, line_type, context=None)
 
-    def _get_sum_payment_move_line(self, cr, uid, move_lines, context=None):
-        return self._get_sum_move_line(cr, uid, move_lines, 'credit', context=None)
+    def _get_sum_payment_move_line(self, cr, uid, move_lines, invoice_type, context=None):
+        if invoice_type in ['in_refund', 'out_invoice']:
+            line_type = 'credit'
+        else:
+            line_type = 'debit'
+        return self._get_sum_move_line(cr, uid, move_lines, line_type, context=None)
 
     def _get_sum_move_line(self, cr, uid, move_lines, line_type, context=None):
         res = {
@@ -105,12 +113,11 @@ class account_invoice(orm.Model):
         currency = invoice.currency_id
         use_currency = currency.id != company_currency_id
         if self._can_be_reconciled(cr, uid, invoice, context=context):
-            payment_move_lines = []
             payment_move_lines = self._get_payment(cr, uid, invoice, context=context)
             res_payment = self._get_sum_payment_move_line(
-                cr, uid, payment_move_lines, context=context)
+                cr, uid, payment_move_lines, invoice.type, context=context)
             res_invoice = self._get_sum_invoice_move_line(
-                cr, uid, invoice.move_id.line_id, context=context)
+                cr, uid, invoice.move_id.line_id, invoice.type, context=context)
             line_ids = res_invoice['line_ids'] + res_payment['line_ids']
             if not use_currency:
                 balance = abs(res_invoice['total_amount'] -
