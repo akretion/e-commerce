@@ -29,28 +29,35 @@ from openerp.osv import fields, orm
 class WizardExceptionConfirm(orm.TransientModel):
     _name = 'wizard.exception.confirm'
 
+    def _links_get(self, cr, uid, context=None):
+        """Gets links value for reference field"""
+        obj = self.pool.get('res.request.link')
+        ids = obj.search(cr, uid, [])
+        res = obj.read(cr, uid, ids, ['object', 'name'], context)
+        return [(r['object'], r['name']) for r in res]
+
+
     _columns = {
-        #'sale_id': fields.many2one('sale.order', 'Sale'),
+        'record': fields.reference('Record', selection=_links_get, size=128),
         'exception_ids': fields.many2many('exception.rule', string='Exceptions to resolve', readonly=True),
         'ignore': fields.boolean('Ignore Exceptions'),
     }
 
-    def default_get(self, cr, uid, fields, context=None):
+    def default_get(self, cr, uid, fields, context):
         res = super(WizardExceptionConfirm, self).default_get(cr, uid, fields, context=context)
-        order_obj = self.pool.get('sale.order')
-        sale_id = context.get('active_id', False)
-        if sale_id:
-            sale = order_obj.browse(cr, uid, sale_id, context=context)
-            exception_ids = [e.id for e in sale.exceptions_ids]
-            res.update({'exception_ids': [(6, 0, exception_ids)]})
+        order_obj = self.pool.get(context['active_model'])
+        record_id = context['active_id']
+        record = order_obj.browse(cr, uid, record_id, context=context)
+        exception_ids = [e.id for e in record.exceptions_ids]
+        res.update({
+            'exception_ids': [(6, 0, exception_ids)],
+            'record': "%s,%s"%(context['active_model'], context['active_id']), 
+            })
         return res
 
     def action_confirm(self, cr, uid, ids, context):
         form = self.browse(cr, uid, ids[0], context=context)
         if form.ignore:
-            self.pool.get(context['active_model']).write(cr, uid,
-                    context['active_id'],
-                    {'ignore_exceptions': True},
-                    context=context)
+            form.record.write({'ignore_exceptions': True})
         return {'type': 'ir.actions.act_window_close'}
 

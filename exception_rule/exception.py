@@ -113,6 +113,7 @@ class Record2Check(orm.AbstractModel):
         ctx.update({
             'active_id': object_id,
             'active_ids': [object_id],
+            'active_model': self._name, 
         })
         list_id = list_obj.create(cr, uid, {}, context=ctx)
         view_id = model_data_obj.get_object_reference(
