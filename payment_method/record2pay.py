@@ -31,14 +31,18 @@ class record2pay(orm.AbstractModel):
     _date_key = None
     _movekey2record = None
     _payment_term_key = None
+    _invoice_type = None #'out_invoice', 'in_refund', 'in_invoice', 'out_refund' 
 
     def _get_amount(self, cr, uid, ids, fields, args, context=None):
         res = {}
         for record in self.browse(cr, uid, ids, context=context):
             #TODO add support when payment is linked to many record
             paid_amount = 0
-            for line in record.payment_ids:    
-                paid_amount += line.credit - line.debit
+            for line in record.payment_ids:
+                if self._invoice_type in ['out_invoice', 'in_refund']:
+                    paid_amount += line.credit - line.debit
+                elif self._invoice_type in ['in_invoice', 'out_refund']:
+                    paid_amount += line.debit - line.credit
             res[record.id] = {
                     'amount_paid': paid_amount, 
                     'residual': record.amount_total - paid_amount,
