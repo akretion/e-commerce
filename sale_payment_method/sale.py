@@ -32,6 +32,7 @@ class sale_order(orm.Model):
     _date_key = 'date_order'
     _movekey2record = 'sale_ids'
     _payment_term_key = 'payment_term'
+    _invoice_type = 'out_invoice'
 
     def _payment_exists(self, cursor, user, ids, name, arg, context=None):
         res = {}
@@ -46,9 +47,6 @@ class sale_order(orm.Model):
             type='boolean',
             help="It indicates that record has at least one payment."),
     }
-
-    def _get_credit_account_id(self, cr, uid, partner, context=None):
-        return partner.property_account_receivable.id
 
     def automatic_payment(self, cr, uid, ids, amount=None, context=None):
         """ Create the payment entries to pay a sale order, respecting
