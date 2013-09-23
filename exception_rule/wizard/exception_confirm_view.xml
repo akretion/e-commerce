@@ -18,13 +18,14 @@
                                 <field name="description"/>
                             </tree>
                         </field>
-                        <newline/>
-                        <field name="ignore" groups='base.group_sale_manager'/>
                     </group>
                     <footer>
-                        <button name="action_confirm" string="_Ok"
-                            colspan="1" type="object" icon="gtk-ok" />
+                        <button name="action_force_validation" string="Ignore Exception and Force Validation"
+                            type="object" class="oe_highlight" groups='base.group_sale_manager'/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
                     </footer>
+ 
                 </form>
             </field>
         </record>

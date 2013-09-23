@@ -55,9 +55,8 @@ class WizardExceptionConfirm(orm.TransientModel):
             })
         return res
 
-    def action_confirm(self, cr, uid, ids, context):
+    def action_force_validation(self, cr, uid, ids, context):
         form = self.browse(cr, uid, ids[0], context=context)
-        if form.ignore:
-            form.record.write({'ignore_exceptions': True})
+        form.record.write({'ignore_exceptions': True})
+        form.record.action_button_confirm()
         return {'type': 'ir.actions.act_window_close'}
-
