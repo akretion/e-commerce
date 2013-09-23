@@ -84,17 +84,7 @@ class Record2Check(orm.AbstractModel):
                 res[current_object.id] = False
         return res
 
-    def _get_main_error(self, cr, uid, ids, name, args, context=None):
-        return self.get_main_error(cr, uid, ids, name, args, context=context)
-
     _columns = {
-        'main_exception_id': fields.function(_get_main_error,
-                        type='many2one',
-                        relation="exception.rule",
-                        string='Main Exception',
-                        store={
-                            'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['exceptions_ids', 'state'], 10),
-                        }),
         'exceptions_ids': fields.many2many('exception.rule',
                                            string='Exceptions'),
         'ignore_exceptions': fields.boolean('Ignore Exceptions'),
