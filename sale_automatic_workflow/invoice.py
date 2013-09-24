@@ -112,18 +112,20 @@ class account_invoice(orm.Model):
         company_currency_id = invoice.company_id.currency_id.id
         currency = invoice.currency_id
         use_currency = currency.id != company_currency_id
+        reconcile = False
+        payment_move_lines = self._get_payment(cr, uid, invoice, context=context)
+        res_payment = self._get_sum_payment_move_line(
+            cr, uid, payment_move_lines, invoice.type, context=context)
+        res_invoice = self._get_sum_invoice_move_line(
+            cr, uid, invoice.move_id.line_id, invoice.type, context=context)
+        line_ids = res_invoice['line_ids'] + res_payment['line_ids']
         if self._can_be_reconciled(cr, uid, invoice, context=context):
-            payment_move_lines = self._get_payment(cr, uid, invoice, context=context)
-            res_payment = self._get_sum_payment_move_line(
-                cr, uid, payment_move_lines, invoice.type, context=context)
-            res_invoice = self._get_sum_invoice_move_line(
-                cr, uid, invoice.move_id.line_id, invoice.type, context=context)
-            line_ids = res_invoice['line_ids'] + res_payment['line_ids']
             if not use_currency:
                 balance = abs(res_invoice['total_amount'] -
                               res_payment['total_amount'])
                 if line_ids and is_zero(cr, uid, currency, balance):
                     move_line_obj.reconcile(cr, uid, line_ids, context=context)
+                    reconcile = True
             else:
                 balance = abs(res_invoice['total_amount_currency'] -
                               res_payment['total_amount_currency'])
@@ -134,6 +136,10 @@ class account_invoice(orm.Model):
                                                      res_payment,
                                                      context=context)
                     move_line_obj.reconcile(cr, uid, line_ids, **kwargs)
+                    reconcile = True
+        unreconciled_payment = [line for line in payment_move_lines if not line.reconcile_partial_id] 
+        if not reconcile and unreconciled_payment:
+            move_line_obj.reconcile_partial(cr, uid, line_ids, context=context)
 
     def reconcile_invoice(self, cr, uid, ids, context=None):
         """ Simple method to reconcile the invoice with the payment
