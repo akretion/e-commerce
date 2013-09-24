@@ -29,14 +29,17 @@ class register_payment(orm.TransientModel):
     _description = 'Wizard to register a payment'
 
     _columns = {
-        'journal_id': fields.many2one('account.journal', 'Journal'),
+        'journal_id': fields.many2one('account.journal', 'Journal', required=True),
         'amount': fields.float('Amount',
-                               digits_compute=dp.get_precision('Sale Price')),
-        'date': fields.datetime('Payment Date'),
+                               digits_compute=dp.get_precision('Sale Price'),
+                               required =True),
+        'date': fields.datetime('Payment Date', required=True),
         'description': fields.char('Description', size=64),
     }
 
     def _get_journal_id(self, cr, uid, context):
+        if context is None or not context.get('active_model'):
+            return None
         model_obj = self.pool.get(context['active_model'])
         record = model_obj.browse(cr, uid, context['active_id'],
                                     context=context)
@@ -45,6 +48,8 @@ class register_payment(orm.TransientModel):
         return None
 
     def _get_amount(self, cr, uid, context):
+        if context is None or not context.get('active_model'):
+            return None
         model_obj = self.pool.get(context['active_model'])
         record = model_obj.browse(cr, uid, context['active_id'],
                                     context=context)
