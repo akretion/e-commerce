@@ -21,7 +21,7 @@
                     </group>
                     <footer>
                         <button name="action_force_validation" string="Ignore Exception and Force Validation"
-                            type="object" class="oe_highlight" groups='base.group_sale_manager'/>
+                            type="object" groups='base.group_sale_manager' confirm="Do you really want to ignore the exception and force the validation?"/>
                         or
                         <button string="Cancel" class="oe_link" special="cancel"/>
                     </footer>
