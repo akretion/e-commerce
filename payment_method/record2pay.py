@@ -146,8 +146,9 @@ class record2pay(orm.AbstractModel):
         """ """
         partner_obj = self.pool.get('res.partner')
         currency_obj = self.pool.get('res.currency')
-        partner = partner_obj._find_accounting_partner(record.partner_id)
-
+        #TODO update OpenERP!!
+        #partner = partner_obj._find_accounting_partner(record.partner_id)
+        partner = record.partner_id
         company = journal.company_id
 
         currency_id = False
