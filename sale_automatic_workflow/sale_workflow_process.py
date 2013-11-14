@@ -55,6 +55,7 @@ class sale_workflow_process(orm.Model):
             'Force Invoice Date',
             help="When checked, the invoice date will be "
                  "the same than the order's date"),
+        'create_picking': fields.boolean('Create picking'),
     }
 
     _defaults = {
@@ -63,4 +64,5 @@ class sale_workflow_process(orm.Model):
         'create_invoice_on': 'manual',
         'invoice_quantity': 'order',
         'validate_invoice': False,
+        'create_picking': True,
     }

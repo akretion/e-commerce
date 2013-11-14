@@ -88,3 +88,11 @@ class sale_order(orm.Model):
         elif invoice_on == 'on_picking_done' and order.shipped:
             return True
         return False
+
+    def _create_pickings_and_procurements(self, cr, uid, order, order_lines, picking_id=False, context=None):
+        workflow_process = order.workflow_process_id
+        if workflow_process and not workflow_process.create_picking:
+            return True
+        return super(sale_order, self)._create_pickings_and_procurements(
+            cr, uid, order, order_lines, picking_id=picking_id,
+            context=context)
