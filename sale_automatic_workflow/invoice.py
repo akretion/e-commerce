@@ -78,7 +78,7 @@ class account_invoice(orm.Model):
                 res['total_amount_currency'] += move_line.amount_currency
         return res
 
-    def _prepare_write_off(self, cr, uid, invoice, res_invoice, res_payment, context=None):
+    def _prepare_write_off(self, cr, uid, write_off_mode, invoice, res_invoice, res_payment, context=None):
         if context is None:
             context = {}
         ctx = context.copy()
@@ -87,9 +87,9 @@ class account_invoice(orm.Model):
         else:
             writeoff_type = 'income'
         account_id, journal_id = invoice.company_id.\
-            get_write_off_information('exchange', writeoff_type, context=context)
+            get_write_off_information(write_off_mode, writeoff_type, context=context)
         max_date = max(res_invoice['max_date'], res_payment['max_date'])
-        ctx['p_date'] = max_date
+        ctx['date_p'] = max_date
         period_obj = self.pool.get('account.period')
         period_id = period_obj.find(cr, uid, max_date, context=context)[0]
         return {
@@ -126,11 +126,26 @@ class account_invoice(orm.Model):
                 if line_ids and is_zero(cr, uid, currency, balance):
                     move_line_obj.reconcile(cr, uid, line_ids, context=context)
                     reconcile = True
+
+                #TODO FIXME
+                #WE should think how to do in the next version
+                #the aim is to be able to configure the write off delta
+                #from a menu
+                elif line_ids and balance < 1:
+                    kwargs = self._prepare_write_off(cr, uid,
+                                                     'various',
+                                                     invoice,
+                                                     res_invoice,
+                                                     res_payment,
+                                                     context=context)
+                    move_line_obj.reconcile(cr, uid, line_ids, **kwargs)
+                    reconcile = True
             else:
                 balance = abs(res_invoice['total_amount_currency'] -
                               res_payment['total_amount_currency'])
                 if line_ids and is_zero(cr, uid, currency, balance):
                     kwargs = self._prepare_write_off(cr, uid,
+                                                     'exchange',
                                                      invoice,
                                                      res_invoice,
                                                      res_payment,
