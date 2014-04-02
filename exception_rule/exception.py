@@ -97,6 +97,8 @@ class Record2Check(orm.AbstractModel):
         return True
 
     def _popup_exceptions(self, cr, uid, object_id, context=None):
+        if context is None:
+            context = {}
         model_data_obj = self.pool.get('ir.model.data')
         list_obj = self.pool.get('wizard.exception.confirm')
         ctx = context.copy()
