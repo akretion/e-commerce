@@ -76,7 +76,7 @@ class Record2Check(orm.AbstractModel):
     def get_main_error(self, cr, uid, ids, name, args, context=None):
         res = {}
         for current_object in self.browse(cr, uid, ids, context=context):
-            if current_object.state == 'draft' and current_object.exceptions_ids:
+            if current_object.exceptions_ids:
                 exceptions = [(exception.sequence, exception.id) for exception in current_object.exceptions_ids]
                 exceptions.sort()
                 res[current_object.id] = exceptions[0][1]
