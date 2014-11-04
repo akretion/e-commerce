@@ -93,11 +93,14 @@ class automatic_workflow_job(orm.Model):
     def _reconcile_invoices(self, cr, uid, ids=None, context=None):
         invoice_obj = self.pool.get('account.invoice')
         if ids is None:
-            ids = invoice_obj.search(cr, uid,
-                                     [('state', 'in', ['open'])],
+            ids = invoice_obj.search(cr, uid, [
+                                     ('state', 'in', ['open']),
+                                     ],
                                      context=context)
+        _logger.debug('Invoice to reconcile: %s', len(ids))
         for invoice_id in ids:
             with commit(cr):
+                _logger.debug('Try to reconcile: %s', invoice_id)
                 invoice_obj.reconcile_invoice(cr, uid,
                                               [invoice_id],
                                               context=context)
@@ -143,6 +146,6 @@ class automatic_workflow_job(orm.Model):
 
         self._validate_sale_orders(cr, uid, context=context)
         self._validate_invoices(cr, uid, context=context)
-        self._reconcile_invoices(cr, uid, context=context)
+        #self._reconcile_invoices(cr, uid, context=context)
         self._validate_pickings(cr, uid, context=context)
         return True

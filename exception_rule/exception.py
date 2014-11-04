@@ -30,6 +30,29 @@ from tools.safe_eval import safe_eval as eval
 from tools.translate import _
 from openerp.tools.config import config
 
+from contextlib import contextmanager
+import logging
+
+_logger = logging.getLogger(__name__)
+
+@contextmanager 
+def commit(cr): 
+    """ 
+    Commit the cursor after the ``yield``, or rollback it if an 
+    exception occurs. 
+ 
+    Warning: using this method, the exceptions are logged then discarded. 
+    """ 
+    try: 
+        yield 
+    except Exception: 
+        cr.rollback() 
+        _logger.exception('Error during an automatic workflow action.')
+    else:
+        cr.commit()
+
+
+
 class exception_rule(orm.Model):
     _name = "exception.rule"
     _description = "Exceptions Rule"
@@ -92,8 +115,16 @@ class Record2Check(orm.AbstractModel):
 
 
     def test_all_draft_orders(self, cr, uid, context=None):
-        ids = self.search(cr, uid, [('state', '=', 'draft')])
-        self.test_exceptions(cr, uid, ids)
+        ids = self.search(cr, uid, [
+            ('state', '=', 'draft'),
+            ('exceptions_ids', '!=', False),
+            ('date_order', '>', '2014-09-01'),
+            ])
+        _logger.debug('Start Test Draft Order %s' % len(ids))
+        for record_id in ids:     
+            with commit(cr):   
+                _logger.debug('Test Draft Order %s' % record_id)
+                self.test_exceptions(cr, uid, [record_id])
         return True
 
     def _popup_exceptions(self, cr, uid, object_id, context=None):
