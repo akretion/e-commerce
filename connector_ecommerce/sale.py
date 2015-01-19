@@ -382,10 +382,27 @@ class sale_order(orm.Model):
             price_unit = vals.pop(option['price_unit_tax_excluded']) * sign
         else:
             return self._clean_special_fields(option, vals)
-        model_data_obj = self.pool.get('ir.model.data')
+
         product_obj = self.pool.get('product.product')
-        __, product_id = model_data_obj.get_object_reference(
-            cr, uid, *option['product_ref'])
+        product_id = False
+        # shipping product should be the one of the delivery method
+        # otherwise, it uses the default one
+        carrier_obj = self.pool.get('delivery.carrier')
+        if option.get('product_ref') == ('connector_ecommerce', 'product_product_shipping')\
+                and vals.get('carrier_id'):
+            carrier = carrier_obj.browse(cr, uid, vals['carrier_id'], context=context)
+            product_id = carrier.product_id.id
+        if not product_id:
+            backend = self.pool.get('prestashop.backend').browse(cr, uid, vals.get('backend_id'))
+            carrier_ids = carrier_obj.search(cr, uid, [('company_id', '=', backend.company_id.id)])
+            if carrier_ids:
+                carrier = carrier_obj.browse(cr, uid, carrier_ids[0], context=context)
+                product_id = carrier.product_id.id
+        if not product_id:
+            model_data_obj = self.pool.get('ir.model.data')
+            __, product_id = model_data_obj.get_object_reference(
+                cr, uid, *option['product_ref'])
+
         product = product_obj.browse(cr, uid, product_id, context=context)
 
         extra_line = self._get_order_extra_line_vals(
