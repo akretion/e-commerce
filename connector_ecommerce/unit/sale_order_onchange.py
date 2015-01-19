@@ -70,6 +70,27 @@ class SaleOrderOnChange(OnChangeManager):
         kwargs = {'context': self.session.context}
         return args, kwargs
 
+    def _get_partner_address_id_onchange_param(self, order):
+        args = [
+            None,
+            order['partner_invoice_id'],
+            order['partner_shipping_id'],
+            order['partner_id'],
+            order['shop_id'],
+            ]
+        kwargs = {'context': self.session.context}
+        return args, kwargs
+
+    def _get_fiscal_position_id_onchange_param(self, order):
+        args = [
+            None,
+            order['fiscal_position'],
+            order['tax_inc'],
+            [],
+            ]
+        kwargs = {'context': self.session.context}
+        return args, kwargs
+
     def _play_order_onchange(self, order):
         """ Play the onchange of the sale order
 
@@ -80,7 +101,7 @@ class SaleOrderOnChange(OnChangeManager):
         :rtype: dict
         """
         sale_model = self.session.pool.get('sale.order')
-
+    
         #Play partner_id onchange
         args, kwargs = self._get_shop_id_onchange_param(order)
         res = sale_model.onchange_shop_id(self.session.cr,
@@ -95,7 +116,7 @@ class SaleOrderOnChange(OnChangeManager):
                                              *args,
                                              **kwargs)
         self.merge_values(order, res)
-
+        
         if order.get('payment_method_id'):
             # apply payment method
             args, kwargs = self._get_payment_method_id_onchange_param(order)
@@ -103,6 +124,14 @@ class SaleOrderOnChange(OnChangeManager):
                                                         self.session.uid,
                                                         *args,
                                                         **kwargs)
+        #If the onchange return an False fiscal position
+        #We do not merge it, because the onchange on the address
+        #will not set correctly the fiscal position as the field
+        #already exist in the order dict
+        if res.get('value') and 'fiscal_position' in res['value']:
+            if not res['fiscal_position']:
+                res.pop('fiscal_position')
+
         self.merge_values(order, res)
 
         if order.get('workflow_process_id'):
@@ -112,6 +141,26 @@ class SaleOrderOnChange(OnChangeManager):
                                                         self.session.uid,
                                                         *args,
                                                         **kwargs)
+        self.merge_values(order, res)
+        
+        #Play onchange on address
+        args, kwargs = self._get_partner_address_id_onchange_param(order)
+        res = sale_model.onchange_address_id(self.session.cr,
+                                             self.session.uid,
+                                             *args,
+                                             **kwargs)
+        if res.get('value') and 'fiscal_position' in res['value']:
+            order['fiscal_position'] = res['value']['fiscal_position']
+        self.merge_values(order, res)
+
+        if res.get('value') and 'tax_inc' in res['value']:
+            order['tax_inc'] = res['value']['tax_inc']
+        #Play onchange on fiscal position
+        args, kwargs = self._get_fiscal_position_id_onchange_param(order)
+        res = sale_model.fiscal_position_id_change(self.session.cr,
+                                             self.session.uid,
+                                             *args,
+                                             **kwargs)
         self.merge_values(order, res)
         return order
 
@@ -139,6 +188,12 @@ class SaleOrderOnChange(OnChangeManager):
         if not uos_qty:
             uos_qty = float(line.get('product_uom_qty', 0))
 
+        context = self.session.context.copy()
+
+        #This is need for the compatibility on the onchange
+        #with the module sale_tax_inc_exc
+        context['tax_inc'] = order.get('tax_inc')
+
         kwargs ={
             'qty': float(line.get('product_uom_qty', 0)),
             'uom': line.get('product_uom'),
@@ -152,7 +207,7 @@ class SaleOrderOnChange(OnChangeManager):
             'packaging': line.get('product_packaging'),
             'fiscal_position': order.get('fiscal_position'),
             'flag': False,
-            'context': self.session.context,
+            'context': context,
             }
         return args, kwargs
 
