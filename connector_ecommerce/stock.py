@@ -52,6 +52,15 @@ class stock_picking(orm.Model):
                                      picking_vals['id'], picking_method)
         return res
 
+    def copy(self, cr, uid, id, default=None, context=None):
+        if default is None:
+            default = {}
+        else:
+            default = default.copy()
+        default['related_backorder_ids'] = False
+        return super(stock_picking, self).copy(cr, uid,
+                                               id, default, context=context)
+
 
 class stock_picking_out(orm.Model):
     _inherit = 'stock.picking.out'
