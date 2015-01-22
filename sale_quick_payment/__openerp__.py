@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #   sale_payment_method for OpenERP
-#   Copyright (C) 2011 Akretion Sébastien BEAU <sebastien.beau@akretion.com>
+#   Copyright (C) 2015-TODAY Akretion <sebastien.beau@akretion.com>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as
@@ -19,32 +19,37 @@
 #
 ##############################################################################
 
+
 {
-    'name': 'Sale Payment Method',
-    'version': '0.2.1',
+    'name': 'Sale Quick Payment',
+    'version': '0.2',
     'category': 'Generic Modules/Others',
     'license': 'AGPL-3',
     'description': """
-Sale Payment Method
-===================
+Sale Quick Payment
+==================
 
-This module adds low-level features used for instance by modules:
+Sale Quick Payment gives the possibility to pay a sale order from the
+sale order itself.
 
-- Sale Automatic Workflow
-- Sale Quick Payment
+The payment will be linked to the sale order.
 
-It adds a payment method on the sales orders and allow to register
-payments entries on sales orders.
-""",
+If you install the module Sale Automatic Workflow, you can forbid the
+validation of an unpaid order and the invoice will be automatically
+reconciled with the payment.
+
+This module was originally designed for the e-commerce sector, but it
+does not preclude to use it in other sectors.
+    """,
     'author': 'Akretion',
     'website': 'http://www.akretion.com/',
-    'depends': ['sale',
+    'depends': ['sale_payment_method',
+                'sale_exceptions',
                 ],
-    'data': ['sale_view.xml',
-             'payment_method_view.xml',
-             'security/ir.model.access.csv',
-             'security/rules.xml',
+    'data': ['wizard/pay_sale_order.xml',
+             'sale_view.xml',
+             'settings/sale.exception.csv',
              ],
     'demo': [],
-    'installable': False,
+    'installable': True,
 }

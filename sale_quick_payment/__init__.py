@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    sale_quick_payment for OpenERP
-#    Copyright (C) 2011 Akretion Sébastien BEAU <sebastien.beau@akretion.com>
+#    Copyright (C) 2015-TODAY Akretion (http://www.akreiton.com)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
