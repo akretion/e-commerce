@@ -47,8 +47,8 @@ it: sebastien.beau@akretion.com
 
 import logging
 from contextlib import contextmanager
+import openerp
 from openerp.osv import orm
-from openerp import netsvc
 
 _logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class automatic_workflow_job(orm.Model):
                 ('workflow_process_id.validate_order', '=', True)]
 
     def _validate_sale_orders(self, cr, uid, context=None):
-        wf_service = netsvc.LocalService("workflow")
+        wf_service = openerp.workflow
         sale_obj = self.pool.get('sale.order')
         domain = self._get_domain_for_sale_validation(cr, uid, context=context)
         sale_ids = sale_obj.search(cr, uid, domain, context=context)
@@ -103,7 +103,7 @@ class automatic_workflow_job(orm.Model):
                                               context=context)
 
     def _validate_invoices(self, cr, uid, context=None):
-        wf_service = netsvc.LocalService("workflow")
+        wf_service = openerp.workflow
         invoice_obj = self.pool.get('account.invoice')
         invoice_ids = invoice_obj.search(
             cr, uid,
