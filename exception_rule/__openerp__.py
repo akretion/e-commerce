@@ -33,7 +33,8 @@ like the sale order or the purchase order. The aim is to add some check before v
     'author': 'Akretion',
     'website': 'http://www.akretion.com',
     'depends': [
-        'base'
+        'base',
+        'email_template'
     ],
     'init_xml': [
                 ],

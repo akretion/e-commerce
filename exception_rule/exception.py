@@ -75,6 +75,7 @@ class exception_rule(orm.Model):
         'code': fields.text('Python Code',
                     help="Python code executed to check if the exception apply or not. " \
                          "The code must apply block = True to apply the exception."),
+        'email_template_id': fields.many2one('email.template', 'Email Template'),
     }
 
     _defaults = {
@@ -213,6 +214,10 @@ class Record2Check(orm.AbstractModel):
         return space.get('failed', False)
 
     def _detect_exceptions(self, cr, uid, current_object, parent_exceptions, line_exceptions, context=None):
+        if context is None:
+            context = {}
+        exception_obj = self.pool['exception.rule']
+        email_obj = self.pool.get('email.template')
         exception_ids = []
         for rule in parent_exceptions:
             if self._rule_eval(cr, uid, rule, current_object, context):
@@ -225,7 +230,17 @@ class Record2Check(orm.AbstractModel):
                     # found for an order line of this order
                 if self._rule_eval(cr, uid, rule, line, context):
                     exception_ids.append(rule.id)
-
+        if exception_ids and not current_object.exceptions_ids:
+            email_template_ids = [exception.email_template_id.id
+                                 for exception in exception_obj.browse(
+                                                    cr, uid, exception_ids,
+                                                    context=context)
+                                 if exception.email_template_id]
+            template_ids = list(set(email_template_ids))
+            for template_id in template_ids:
+                context['mail_exception'] = True
+                email_obj.send_mail(cr, uid, template_id,
+                            current_object.id, force_send=False, context=context)
         return exception_ids
 
     def copy(self, cr, uid, id, default=None, context=None):
