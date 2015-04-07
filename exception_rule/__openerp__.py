@@ -42,6 +42,7 @@ like the sale order or the purchase order. The aim is to add some check before v
         'exception_view.xml',
         'wizard/exception_confirm_view.xml',
         'security/ir.model.access.csv',
+        'exceptions_email_template.xml',
         ],
     'demo_xml': [],
     'installable': True,

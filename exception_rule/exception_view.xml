@@ -29,8 +29,10 @@
                         <group colspan="4" col="2" groups="base.group_system">
                             <field name="model"/>
                             <field name="code"/>
+                            <field name="send_email"/>
+                            <field name="email_description"
+                                   attrs="{'invisible': [('send_email', '!=', True)]}"/>
                         </group>
-                        <field name="email_template_id"/>
                     </group>
                 </form>
             </field>

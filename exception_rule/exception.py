@@ -75,7 +75,15 @@ class exception_rule(orm.Model):
         'code': fields.text('Python Code',
                     help="Python code executed to check if the exception apply or not. " \
                          "The code must apply block = True to apply the exception."),
-        'email_template_id': fields.many2one('email.template', 'Email Template'),
+        'send_email': fields.boolean(
+            'Notify exception by Email',
+            help=("If true, a notification will be send "
+                  "by email at the creation of the exception")),
+        'email_description': fields.html(
+            'Email Description',
+            help=("If you want to customize a specific message for this"
+                  "exception, you can adapt the email template"
+                  "to display this html description")),
     }
 
     _defaults = {
@@ -164,8 +172,17 @@ class Record2Check(orm.AbstractModel):
             return False
         return True
 
+    def should_notify(self, cr, uid, record, exception_ids, context=None):
+        exception_obj = self.pool['exception.rule']
+        notify = any(exception.send_email for exception in
+                     exception_obj.browse(cr, uid, exception_ids,
+                     context=context))
+        return notify and not record.exceptions_ids
+
     def detect_exceptions(self, cr, uid, ids, context=None):
-        exception_obj = self.pool.get('exception.rule')
+        exception_obj = self.pool['exception.rule']
+        email_obj = self.pool['email.template']
+        model_data_obj = self.pool['ir.model.data']
         parent_exception_ids = exception_obj.search(cr, uid,
             [('model', '=', self._name)], context=context)
         line_exception_ids = exception_obj.search(cr, uid,
@@ -180,8 +197,15 @@ class Record2Check(orm.AbstractModel):
                 continue
             exception_ids = self._detect_exceptions(cr, uid, current_object,
                 parent_exceptions, line_exceptions, context=context)
-
+            should_notify = self.should_notify(cr, uid, current_object, exception_ids,
+                                  context=context)
             self.write(cr, uid, [current_object.id], {'exceptions_ids': [(6, 0, exception_ids)]})
+            if should_notify:
+                model, email_tmpl_id = model_data_obj.get_object_reference(
+                                            cr, uid, 'exception_rule',
+                                            'email_template_sale_exceptions')
+                email_obj.send_mail(cr, uid, email_tmpl_id,
+                            current_object.id, force_send=False, context=context)
         return exception_ids
 
     def _exception_rule_eval_context(self, cr, uid, obj, context=None):
@@ -230,17 +254,6 @@ class Record2Check(orm.AbstractModel):
                     # found for an order line of this order
                 if self._rule_eval(cr, uid, rule, line, context):
                     exception_ids.append(rule.id)
-        if exception_ids and not current_object.exceptions_ids:
-            email_template_ids = [exception.email_template_id.id
-                                 for exception in exception_obj.browse(
-                                                    cr, uid, exception_ids,
-                                                    context=context)
-                                 if exception.email_template_id]
-            template_ids = list(set(email_template_ids))
-            for template_id in template_ids:
-                context['mail_exception'] = True
-                email_obj.send_mail(cr, uid, template_id,
-                            current_object.id, force_send=False, context=context)
         return exception_ids
 
     def copy(self, cr, uid, id, default=None, context=None):
