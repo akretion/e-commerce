@@ -79,7 +79,7 @@ class exception_rule(orm.Model):
             'Notify exception by Email',
             help=("If true, a notification will be send "
                   "by email at the creation of the exception")),
-        'email_description': fields.html(
+        'email_description': fields.text(
             'Email Description',
             help=("If you want to customize a specific message for this"
                   "exception, you can adapt the email template"
