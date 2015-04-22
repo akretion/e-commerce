@@ -81,6 +81,7 @@ class exception_rule(orm.Model):
                   "by email at the creation of the exception")),
         'email_description': fields.text(
             'Email Description',
+            translate=True,
             help=("If you want to customize a specific message for this"
                   "exception, you can adapt the email template"
                   "to display this html description")),
