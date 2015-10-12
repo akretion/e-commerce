@@ -46,7 +46,6 @@ does not preclude to use it in other sectors.
     'depends': [
         'quick_payment',
         'sale_exceptions',
-        'sale_payment_method',
     ],
     'data': [
         'sale_view.xml',
