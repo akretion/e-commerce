@@ -63,15 +63,6 @@ class SaleOrder(models.Model):
     )
 
     @api.multi
-    def action_cancel(self):
-        for sale in self:
-            if sale.payment_ids:
-                raise exceptions.Warning(_('Cannot cancel this sales order '
-                                           'because automatic payment entries '
-                                           'are linked with it.'))
-        return super(SaleOrder, self).action_cancel()
-
-    @api.multi
     def automatic_payment(self, amount=None):
         """ Create the payment entries to pay a sale order, respecting
         the payment terms.
