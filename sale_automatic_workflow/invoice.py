@@ -22,6 +22,7 @@
 #
 ###############################################################################
 from openerp.osv import fields, orm
+import time
 
 
 class account_invoice(orm.Model):
