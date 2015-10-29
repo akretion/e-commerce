@@ -88,10 +88,9 @@ class account_invoice(orm.Model):
             writeoff_type = 'income'
         account_id, journal_id = invoice.company_id.\
             get_write_off_information(write_off_mode, writeoff_type, context=context)
-        max_date = max(res_invoice['max_date'], res_payment['max_date'])
-        ctx['date_p'] = max_date
+        ctx['date_p'] = time.strftime('%Y-%m-%d')
         period_obj = self.pool.get('account.period')
-        period_id = period_obj.find(cr, uid, max_date, context=context)[0]
+        period_id = period_obj.find(cr, uid, ctx['date_p'], context=context)[0]
         return {
             'type': 'auto',
             'writeoff_acc_id': account_id,
