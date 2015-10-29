@@ -158,7 +158,6 @@ class account_invoice(orm.Model):
                                                      res_payment,
                                                      context=context)
                     move_line_obj.reconcile(cr, uid, line_ids, **kwargs)
-                    reconcile = True
             else:
                 balance = abs(res_invoice['total_amount_currency'] -
                               res_payment['total_amount_currency'])
@@ -170,10 +169,6 @@ class account_invoice(orm.Model):
                                                      res_payment,
                                                      context=context)
                     move_line_obj.reconcile(cr, uid, line_ids, **kwargs)
-                    reconcile = True
-        unreconciled_payment = [line for line in payment_move_lines if not line.reconcile_partial_id] 
-        if not reconcile and unreconciled_payment:
-            move_line_obj.reconcile_partial(cr, uid, line_ids, context=context)
 
     def reconcile_invoice(self, cr, uid, ids, context=None):
         """ Simple method to reconcile the invoice with the payment
