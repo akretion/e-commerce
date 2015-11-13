@@ -33,12 +33,12 @@ class ProductLink(models.Model):
                 ('related', 'Related')]
 
     product_id = fields.Many2one(
-        comodel_name='product.product',
+        comodel_name='product.template',
         string='Source Product',
         required=True,
         ondelete='cascade')
     linked_product_id = fields.Many2one(
-        comodel_name='product.product',
+        comodel_name='product.template',
         string='Linked product',
         required=True,
         ondelete='cascade')
@@ -49,8 +49,8 @@ class ProductLink(models.Model):
     is_active = fields.Boolean('Active', default=True)
 
 
-class Product(models.Model):
-    _inherit = 'product.product'
+class ProductTemplate(models.Model):
+    _inherit = 'product.template'
 
     product_link_ids = fields.One2many(
         comodel_name='product.link',
