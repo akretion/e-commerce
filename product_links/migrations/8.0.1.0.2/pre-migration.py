@@ -19,30 +19,16 @@
 #
 ##############################################################################
 
-{
-    'name': 'Product Links',
-    'version': '8.0.1.0.2',
-    'category': 'Generic Modules',
-    'description': """
-This module adds links between products:
+""" r0.2: Migration 8.0.1.0.1 => 8.0.1.0.2
+    migrate the model from product.product to product.template
+"""
+__name__ = ("product.link:: V8 change the linked model product.product to "
+            "product.template")
 
-- cross-selling
-- up-selling
-- related
 
-These types of links are common in e-commerce shops.
-
-It can be used as a base to implement synchronisations with
-e-commerce (for instance, it is used in magentoerpconnect).
-    """,
-    'author': "Camptocamp,Odoo Community Association (OCA)",
-    'website': 'http://www.camptocamp.com',
-    'license': 'AGPL-3',
-    'depends': ['product'],
-    'data': [
-        'security/ir.model.access.csv',
-        'product_links_view.xml'
-    ],
-    'installable': True,
-    'active': False,
-}
+def migrate(cr, version):
+    if version:
+        cr.execute("ALTER TABLE product_link "
+                   "RENAME COLUMN product_id TO old_product_id")
+        cr.execute("ALTER TABLE product_link "
+                   "RENAME COLUMN linked_product_id TO old_linked_product_id")
