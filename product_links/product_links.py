@@ -23,7 +23,7 @@ from openerp import models, fields, api
 
 class ProductLink(models.Model):
     _name = 'product.link'
-    _rec_name = 'linked_product_id'
+    _rec_name = 'linked_product_tmpl_id'
 
     @api.model
     def get_link_type_selection(self):
@@ -32,13 +32,13 @@ class ProductLink(models.Model):
                 ('up_sell', 'Up-Sell'),
                 ('related', 'Related')]
 
-    product_id = fields.Many2one(
-        comodel_name='product.product',
+    product_tmpl_id = fields.Many2one(
+        comodel_name='product.template',
         string='Source Product',
         required=True,
         ondelete='cascade')
-    linked_product_id = fields.Many2one(
-        comodel_name='product.product',
+    linked_product_tmpl_id = fields.Many2one(
+        comodel_name='product.template',
         string='Linked product',
         required=True,
         ondelete='cascade')
@@ -49,11 +49,11 @@ class ProductLink(models.Model):
     is_active = fields.Boolean('Active', default=True)
 
 
-class Product(models.Model):
-    _inherit = 'product.product'
+class ProductTemplate(models.Model):
+    _inherit = 'product.template'
 
     product_link_ids = fields.One2many(
         comodel_name='product.link',
-        inverse_name='product_id',
+        inverse_name='product_tmpl_id',
         string='Product links'
     )
